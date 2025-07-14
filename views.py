@@ -1,222 +1,225 @@
-
-from django.db.models import  Count, Avg
-from django.shortcuts import render, redirect
 from django.db.models import Count
 from django.db.models import Q
-import datetime
-import xlwt
-from django.http import HttpResponse
-import numpy as np
+from django.shortcuts import render, redirect, get_object_or_404
 
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 from sklearn.metrics import accuracy_score
 from sklearn.tree import DecisionTreeClassifier
-
+from sklearn.ensemble import VotingClassifier
 # Create your views here.
 from Remote_User.models import ClientRegister_Model,drink_driving_detection,detection_ratio,detection_accuracy
 
+def login(request):
 
-def serviceproviderlogin(request):
-    if request.method  == "POST":
-        admin = request.POST.get('username')
+
+    if request.method == "POST" and 'submit1' in request.POST:
+
+        username = request.POST.get('username')
         password = request.POST.get('password')
-        if admin == "Admin" and password =="Admin":
-            detection_accuracy.objects.all().delete()
-            return redirect('View_Remote_Users')
+        try:
+            enter = ClientRegister_Model.objects.get(username=username,password=password)
+            request.session["userid"] = enter.id
+            
+            return redirect('ViewYourProfile')
+        except:
+            pass
 
-    return render(request,'SProvider/serviceproviderlogin.html')
+    return render(request,'RUser/login.html')
 
-def View_Prediction_Of_Drink_Driving_Detection_Ratio(request):
-    detection_ratio.objects.all().delete()
-    ratio = ""
-    kword = 'No Drink Driving Detection'
-    print(kword)
-    obj = drink_driving_detection.objects.all().filter(Q(Prediction=kword))
-    obj1 = drink_driving_detection.objects.all()
-    count = obj.count();
-    count1 = obj1.count();
-    ratio = (count / count1) * 100
-    if ratio != 0:
-        detection_ratio.objects.create(names=kword, ratio=ratio)
+def index(request):
+    return render(request, 'RUser/index.html')
 
-    ratio12 = ""
-    kword12 = 'Drink Driving Detection'
-    print(kword12)
-    obj12 = drink_driving_detection.objects.all().filter(Q(Prediction=kword12))
-    obj112 = drink_driving_detection.objects.all()
-    count12 = obj12.count();
-    count112 = obj112.count();
-    ratio12 = (count12 / count112) * 100
-    if ratio12 != 0:
-        detection_ratio.objects.create(names=kword12, ratio=ratio12)
+def Add_DataSet_Details(request):
+
+    return render(request, 'RUser/Add_DataSet_Details.html', {"excel_data": ''})
 
 
-    obj = detection_ratio.objects.all()
-    return render(request, 'SProvider/View_Prediction_Of_Drink_Driving_Detection_Ratio.html', {'objs': obj})
+def Register1(request):
 
-def View_Remote_Users(request):
-    obj=ClientRegister_Model.objects.all()
-    return render(request,'SProvider/View_Remote_Users.html',{'objects':obj})
+    if request.method == "POST":
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        phoneno = request.POST.get('phoneno')
+        country = request.POST.get('country')
+        state = request.POST.get('state')
+        city = request.POST.get('city')
+        address = request.POST.get('address')
+        gender = request.POST.get('gender')
+        ClientRegister_Model.objects.create(username=username, email=email, password=password, phoneno=phoneno,
+                                            country=country, state=state, city=city,address=address,gender=gender)
 
-def charts(request,chart_type):
-    chart1 = detection_ratio.objects.values('names').annotate(dcount=Avg('ratio'))
-    return render(request,"SProvider/charts.html", {'form':chart1, 'chart_type':chart_type})
+        obj = "Registered Successfully"
+        return render(request, 'RUser/Register1.html',{'object':obj})
+    else:
+        return render(request,'RUser/Register1.html')
 
-def charts1(request,chart_type):
-    chart1 = detection_accuracy.objects.values('names').annotate(dcount=Avg('ratio'))
-    return render(request,"SProvider/charts1.html", {'form':chart1, 'chart_type':chart_type})
-
-def View_Prediction_Of_Drink_Driving_Detection(request):
-    obj =drink_driving_detection.objects.all()
-    return render(request, 'SProvider/View_Prediction_Of_Drink_Driving_Detection.html', {'list_objects': obj})
-
-def likeschart(request,like_chart):
-    charts =detection_accuracy.objects.values('names').annotate(dcount=Avg('ratio'))
-    return render(request,"SProvider/likeschart.html", {'form':charts, 'like_chart':like_chart})
-
-
-def Download_Predicted_DataSets(request):
-
-    response = HttpResponse(content_type='application/ms-excel')
-    # decide file name
-    response['Content-Disposition'] = 'attachment; filename="Predicted_Datasets.xls"'
-    # creating workbook
-    wb = xlwt.Workbook(encoding='utf-8')
-    # adding sheet
-    ws = wb.add_sheet("sheet1")
-    # Sheet header, first row
-    row_num = 0
-    font_style = xlwt.XFStyle()
-    # headers are bold
-    font_style.font.bold = True
-    # writer = csv.writer(response)
-    obj = drink_driving_detection.objects.all()
-    data = obj  # dummy method to fetch data.
-    for my_row in data:
-        row_num = row_num + 1
-
-        ws.write(row_num, 0, my_row.idnumber, font_style)
-        ws.write(row_num, 1, my_row.City_Location, font_style)
-        ws.write(row_num, 2, my_row.day, font_style)
-        ws.write(row_num, 3, my_row.Sex, font_style)
-        ws.write(row_num, 4, my_row.Age, font_style)
-        ws.write(row_num, 5, my_row.Time, font_style)
-        ws.write(row_num, 6, my_row.Day_of_week, font_style)
-        ws.write(row_num, 7, my_row.Educational_level, font_style)
-        ws.write(row_num, 8, my_row.Vehicle_driver_relation, font_style)
-        ws.write(row_num, 9, my_row.Driving_experience, font_style)
-        ws.write(row_num, 10, my_row.Type_of_vehicle, font_style)
-        ws.write(row_num, 11, my_row.Owner_of_vehicle, font_style)
-        ws.write(row_num, 12, my_row.Ser_year_of_veh, font_style)
-        ws.write(row_num, 13, my_row.Lanes_or_Medians, font_style)
-        ws.write(row_num, 14, my_row.Road_allignment, font_style)
-        ws.write(row_num, 15, my_row.Road_surface_type, font_style)
-        ws.write(row_num, 16, my_row.Vehicle_movement, font_style)
-        ws.write(row_num, 18, my_row.Prediction, font_style)
-
-    wb.save(response)
-    return response
-
-def train_model(request):
-    detection_accuracy.objects.all().delete()
-
-    df = pd.read_csv('Driving_Datasets.csv',encoding='latin-1')
-
-    def apply_response(Label):
-        if (Label== 0):
-            return 0  # Not Detected
-        elif (Label== 1):
-            return 1  # Detected
-
-    df['results'] = df['Label'].apply(apply_response)
-
-    #cv = CountVectorizer()
-    x = df['Time'].apply(str)
-    y = df['results']
-
-    print("Review")
-    print(x)
-    print("Results")
-    print(y)
-
-    cv = CountVectorizer(lowercase=False, strip_accents='unicode', ngram_range=(1, 1))
-
-    #X = cv.fit_transform(df['Vehicle_movement'].apply(lambda x: np.str_(x)))
-
-    X = cv.fit_transform(x)
-
-    models = []
-    from sklearn.model_selection import train_test_split
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
-    X_train.shape, X_test.shape, y_train.shape
+def ViewYourProfile(request):
+    userid = request.session['userid']
+    obj = ClientRegister_Model.objects.get(id= userid)
+    return render(request,'RUser/ViewYourProfile.html',{'object':obj})
 
 
-    print(X_test)
+def Predict_Drink_Driving_Detection(request):
+    if request.method == "POST":
+
+        if request.method == "POST":
+
+            idnumber= request.POST.get('idnumber')
+            City_Location= request.POST.get('City_Location')
+            day= request.POST.get('day')
+            Sex= request.POST.get('Sex')
+            Age= request.POST.get('Age')
+            Time= request.POST.get('Time')
+            Day_of_week= request.POST.get('Day_of_week')
+            Educational_level= request.POST.get('Educational_level')
+            Vehicle_driver_relation= request.POST.get('Vehicle_driver_relation')
+            Driving_experience= request.POST.get('Driving_experience')
+            Type_of_vehicle= request.POST.get('Type_of_vehicle')
+            Owner_of_vehicle= request.POST.get('Owner_of_vehicle')
+            Service_year_of_vehicle= request.POST.get('Service_year_of_vehicle')
+            Lanes_or_Medians= request.POST.get('Lanes_or_Medians')
+            Road_allignment= request.POST.get('Road_allignment')
+            Road_surface_type= request.POST.get('Road_surface_type') 
+            Vehicle_movement= request.POST.get('Vehicle_movement')
+
+        df = pd.read_csv('Driving_Datasets.csv', encoding='latin-1')
+
+        def apply_response(Label):
+            if (Label == 0):
+                return 0  # Not Detected
+
+            elif (Label == 1):
+                return 1  # Detected
+
+                
+
+        df['results'] = df['Label'].apply(apply_response)
+
+        # cv = CountVectorizer()
+        x = df['idnumber'].apply(str)
+        y = df['results']
+
+        print("Review")
+        print(x)
+        print("Results")
+        print(y)
+
+        cv = CountVectorizer(lowercase=False, strip_accents='unicode', ngram_range=(1, 1))
+
+        # X = cv.fit_transform(df['Vehicle_movement'].apply(lambda x: np.str_(x)))
+
+        X = cv.fit_transform(x)
+
+        models = []
+        from sklearn.model_selection import train_test_split
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
+        X_train.shape, X_test.shape, y_train.shape
+
+        print("Naive Bayes")
+
+        from sklearn.naive_bayes import MultinomialNB
+
+        NB = MultinomialNB()
+        NB.fit(X_train, y_train)
+        predict_nb = NB.predict(X_test)
+        naivebayes = accuracy_score(y_test, predict_nb) * 100
+        print("ACCURACY")
+        print(naivebayes)
+        print("CLASSIFICATION REPORT")
+        print(classification_report(y_test, predict_nb))
+        print("CONFUSION MATRIX")
+        print(confusion_matrix(y_test, predict_nb))
+        models.append(('naive_bayes', NB))
+
+        # SVM Model
+        print("SVM")
+        from sklearn import svm
+
+        lin_clf = svm.LinearSVC()
+        lin_clf.fit(X_train, y_train)
+        predict_svm = lin_clf.predict(X_test)
+        svm_acc = accuracy_score(y_test, predict_svm) * 100
+        print("ACCURACY")
+        print(svm_acc)
+        print("CLASSIFICATION REPORT")
+        print(classification_report(y_test, predict_svm))
+        print("CONFUSION MATRIX")
+        print(confusion_matrix(y_test, predict_svm))
+        models.append(('svm', lin_clf))
+        
+        #Logistic Regression
+        print("Logistic Regression")
+
+        from sklearn.linear_model import LogisticRegression
+
+        reg = LogisticRegression(random_state=0, solver='lbfgs').fit(X_train, y_train)
+        y_pred = reg.predict(X_test)
+        print("ACCURACY")
+        print(accuracy_score(y_test, y_pred) * 100)
+        print("CLASSIFICATION REPORT")
+        print(classification_report(y_test, y_pred))
+        print("CONFUSION MATRIX")
+        print(confusion_matrix(y_test, y_pred))
+        models.append(('logistic', reg))
+
+        #Decision Tree Classifier
+        print("Decision Tree Classifier")
+        dtc = DecisionTreeClassifier()
+        dtc.fit(X_train, y_train)
+        dtcpredict = dtc.predict(X_test)
+        print("ACCURACY")
+        print(accuracy_score(y_test, dtcpredict) * 100)
+        print("CLASSIFICATION REPORT")
+        print(classification_report(y_test, dtcpredict))
+        print("CONFUSION MATRIX")
+        print(confusion_matrix(y_test, dtcpredict))
+        models.append(('DecisionTreeClassifier', dtc))
+
+        classifier = VotingClassifier(models)
+        classifier.fit(X_train, y_train)
+        y_pred = classifier.predict(X_test)
+
+        idnumber1 = [idnumber]
+        vector1 = cv.transform(idnumber1).toarray()
+        predict_text = classifier.predict(vector1)
+
+        pred = str(predict_text).replace("[", "")
+        pred1 = pred.replace("]", "")
+
+        prediction = int(pred1)
+
+        if (prediction == 0):
+            val = 'No Drink Driving Detection'
+        elif (prediction == 1):
+            val = 'Drink Driving Detection'
+
+        print(val)
+        print(pred1)
+
+        drink_driving_detection.objects.create(idnumber=idnumber,
+        City_Location=City_Location,
+        day=day,
+        Sex=Sex,
+        Age=Age,
+        Time=Time,
+        Day_of_week=Day_of_week,
+        Educational_level=Educational_level,
+        Vehicle_driver_relation=Vehicle_driver_relation,
+        Driving_experience=Driving_experience,
+        Type_of_vehicle=Type_of_vehicle,
+        Owner_of_vehicle=Owner_of_vehicle,
+        Ser_year_of_veh=Service_year_of_vehicle,
+        Lanes_or_Medians=Lanes_or_Medians,
+        Road_allignment=Road_allignment,
+        Road_surface_type=Road_surface_type,
+        Vehicle_movement=Vehicle_movement,
+        Prediction=val)
+
+        return render(request, 'RUser/Predict_Drink_Driving_Detection.html',{'objs': val})
+    return render(request, 'RUser/Predict_Drink_Driving_Detection.html')
 
 
-    # SVM Model
-    print("SVM")
-    from sklearn import svm
-    lin_clf = svm.LinearSVC()
-    lin_clf.fit(X_train, y_train)
-    predict_svm = lin_clf.predict(X_test)
-    svm_acc = accuracy_score(y_test, predict_svm) * 100
-    print(svm_acc)
-    print("CLASSIFICATION REPORT")
-    print(classification_report(y_test, predict_svm))
-    print("CONFUSION MATRIX")
-    print(confusion_matrix(y_test, predict_svm))
-    models.append(('svm', lin_clf))
-    detection_accuracy.objects.create(names="SVM", ratio=svm_acc)
 
-
-    print("Decision Tree Classifier")
-    dtc = DecisionTreeClassifier()
-    dtc.fit(X_train, y_train)
-    dtcpredict = dtc.predict(X_test)
-    print("ACCURACY")
-    print(accuracy_score(y_test, dtcpredict) * 100)
-    print("CLASSIFICATION REPORT")
-    print(classification_report(y_test, dtcpredict))
-    print("CONFUSION MATRIX")
-    print(confusion_matrix(y_test, dtcpredict))
-    models.append(('DecisionTreeClassifier', dtc))
-    detection_accuracy.objects.create(names="Decision Tree Classifier", ratio=accuracy_score(y_test, dtcpredict) * 100)
-
-    print("Random Forest Classifier")
-    from sklearn.ensemble import RandomForestClassifier
-    rf_clf = RandomForestClassifier()
-    rf_clf.fit(X_train, y_train)
-    rfpredict = rf_clf.predict(X_test)
-    print("ACCURACY")
-    print(accuracy_score(y_test, rfpredict) * 100)
-    print("CLASSIFICATION REPORT")
-    print(classification_report(y_test, rfpredict))
-    print("CONFUSION MATRIX")
-    print(confusion_matrix(y_test, rfpredict))
-    models.append(('RandomForestClassifier', rf_clf))
-    detection_accuracy.objects.create(names="Random Forest Classifier", ratio=accuracy_score(y_test, rfpredict) * 100)
-
-    print("KNeighborsClassifier")
-    from sklearn.neighbors import KNeighborsClassifier
-    kn = KNeighborsClassifier()
-    kn.fit(X_train, y_train)
-    knpredict = kn.predict(X_test)
-    print("ACCURACY")
-    print(accuracy_score(y_test, knpredict) * 100)
-    print("CLASSIFICATION REPORT")
-    print(classification_report(y_test, knpredict))
-    print("CONFUSION MATRIX")
-    print(confusion_matrix(y_test, knpredict))
-    models.append(('KNeighborsClassifier', kn))
-    detection_accuracy.objects.create(names="KNeighborsClassifier", ratio=accuracy_score(y_test, knpredict) * 100)
-
-
-    csv_format = 'Results.csv'
-    df.to_csv(csv_format, index=False)
-    df.to_markdown
-
-    obj = detection_accuracy.objects.all()
-    return render(request,'SProvider/train_model.html', {'objs': obj})
