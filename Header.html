@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Remote User</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Open+Sans:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+
+    <style>
+        body {
+            background: url("{% static 'bg.jpg' %}") no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Open Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #000000;
+            position: relative;
+            animation: fadeInBody 1.5s ease;
+        }
+
+        @keyframes fadeInBody {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ff4d4d; /* Default color red */
+            font-family: 'Russo One', sans-serif;
+            font-size: 2.5rem;
+            margin: 40px 20px 20px 20px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+            animation: fadeInDown 1.2s ease;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Stylish Options */
+        .options-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+            flex-wrap: wrap;
+            margin: 30px 20px;
+            z-index: 1;
+            animation: fadeInUp 1.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .option-card {
+            background: linear-gradient(135deg, #8e4fd1, #6a0dad);
+            color: white;
+            padding: 25px 35px;
+            text-align: center;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+            transition: transform 0.3s, box-shadow 0.3s, background 0.4s;
+            min-width: 260px;
+        }
+
+        .option-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.5);
+            background: linear-gradient(135deg, #6a0dad, #8e4fd1);
+        }
+
+        /* Main Content Area (Bottom part) */
+        .mainholder {
+            max-width: 1400px; /* Increased width here */
+            width: 95%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            margin: 40px 0;
+            padding: 50px 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            color: white;
+            text-align: center;
+            z-index: 1;
+            overflow-x: auto; /* For very big tables */
+            transition: opacity 0.5s ease;
+        }
+
+        .style1 {
+            color: #ff4d4d;
+        }
+
+        .dynamic-heading {
+            color: #6a0dad; /* Default color for dynamic heading */
+        }
+
+        /* Example of Change in Heading Color Based on Page */
+        /* You can dynamically add or modify these classes based on different conditions */
+        .heading-success {
+            color: #28a745; /* Green for success */
+        }
+
+        .heading-warning {
+            color: #ffc107; /* Yellow for warning */
+        }
+
+        .heading-error {
+            color: #dc3545; /* Red for error */
+        }
+    </style>
+</head>
+<body>
+
+<h1 class="style1 dynamic-heading">Detect DUI: An In-Car Detection System for Drink Driving</h1>
+
+<!-- Stylish Options (No Navbar) -->
+<div class="options-container">
+    <a class="option-card" href="{% url 'Predict_Drink_Driving_Detection' %}">
+        PREDICT DRINK DRIVING DETECTION TYPE
+    </a>
+    <a class="option-card" href="{% url 'ViewYourProfile' %}">
+        VIEW YOUR PROFILE
+    </a>
+    <a class="option-card" href="{% url 'index' %}">
+        LOGOUT
+    </a>
+</div>
+
+<!-- Wider and Proper Main Content Area -->
+<div class="mainholder">
+    {% block userblock %}
+    {% endblock %}
+</div>
+
+<script>
+    // Example of changing the heading color dynamically using JavaScript.
+    // You can modify the logic to change colors based on the page context.
+
+    // Dynamically change heading color based on some condition (you can adjust logic based on your needs)
+    document.addEventListener("DOMContentLoaded", function() {
+        let heading = document.querySelector(".dynamic-heading");
+        
+        // For instance, change to success color on certain page
+        // heading.classList.add("heading-success");
+
+        // Alternatively, you can toggle class dynamically as needed
+        // heading.classList.add("heading-warning"); // For yellow color
+        // heading.classList.add("heading-error");   // For red color
+    });
+</script>
+
+</body>
+</html>
